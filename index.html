@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Finance Broadcast Background</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #f4f5f7;
+  font-family: Arial, sans-serif;
+}
+
+/* ========================= */
+/* ANIMATIONS */
+/* ========================= */
+
+@keyframes scan {
+
+  0% {
+    transform: translateX(-100%) rotate(12deg);
+  }
+
+  100% {
+    transform: translateX(500%) rotate(12deg);
+  }
+}
+
+@keyframes rotateOrb {
+
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotateOrbReverse {
+
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes floatParticles {
+
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulseDot {
+
+  0% {
+    opacity: .25;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.8);
+  }
+
+  100% {
+    opacity: .25;
+    transform: scale(1);
+  }
+}
+
+/* ========================= */
+/* EFFECTS */
+/* ========================= */
+
+.scan {
+  animation: scan 8s linear infinite;
+}
+
+.ring1 {
+  animation: rotateOrb 18s linear infinite;
+  transform-origin: center;
+}
+
+.ring2 {
+  animation: rotateOrbReverse 24s linear infinite;
+  transform-origin: center;
+}
+
+.ring3 {
+  animation: rotateOrb 30s linear infinite;
+  transform-origin: center;
+}
+
+.particles {
+  animation: floatParticles 8s ease-in-out infinite;
+}
+
+.world-dot {
+  animation: pulseDot 4s ease-in-out infinite;
+}
+
+.chart-dot {
+  animation: pulseDot 3s ease-in-out infinite;
+}
+
+/* ========================= */
+/* UI */
+/* ========================= */
+
+.controls-hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+.controls-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.transition-ui {
+  transition: all .5s ease;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div
+  id="app"
+  class="relative w-screen h-screen overflow-hidden">
+
+  <!-- BG IMAGE -->
+  <div
+    id="bgImage"
+    class="absolute inset-0 bg-cover bg-center"
+    style="
+      opacity: .18;
+      filter:
+      saturate(1.05)
+      contrast(1.05);
+    ">
+  </div>
+
+  <!-- COLOR OVERLAY -->
+  <div
+    id="colorLayer"
+    class="absolute inset-0 pointer-events-none"
+    style="
+      mix-blend-mode: overlay;
+
+      background:
+
+      radial-gradient(
+        circle at top left,
+        rgba(0,210,122,0.14),
+        transparent 35%
+      ),
+
+      radial-gradient(
+        circle at bottom right,
+        rgba(0,210,122,0.18),
+        transparent 45%
+      ),
+
+      linear-gradient(
+        180deg,
+        rgba(255,255,255,0.05),
+        rgba(0,0,0,0.03)
+      );
+    ">
+  </div>
+
+  <!-- GRID -->
+  <div
+    class="absolute inset-0 opacity-[0.05]"
+    style="
+      background-image:
+      linear-gradient(to right, black 1px, transparent 1px),
+      linear-gradient(to bottom, black 1px, transparent 1px);
+
+      background-size: 60px 60px;
+    ">
+  </div>
+
+  <!-- WORLD MAP -->
+  <div
+    class="
+      absolute
+      top-0
+      right-0
+      w-[55vw]
+      h-[35vh]
+      opacity-[0.18]
+      pointer-events-none
+      overflow-hidden
+    ">
+
+    <svg
+      id="worldMap"
+      viewBox="0 0 1200 500"
+      class="w-full h-full">
+
+      <g id="worldDots"></g>
+
+    </svg>
+
+  </div>
+
+  <!-- AI ORB -->
+  <div
+    class="
+      absolute
+      left-[3%]
+      top-[4%]
+      w-[320px]
+      h-[320px]
+      opacity-80
+      pointer-events-none
+    ">
+
+    <svg
+      viewBox="0 0 320 320"
+      class="w-full h-full overflow-visible">
+
+      <defs>
+
+        <radialGradient id="orbGlow">
+
+          <stop
+            offset="0%"
+            stop-color="#00d27a"
+            stop-opacity="0.95"/>
+
+          <stop
+            offset="40%"
+            stop-color="#00d27a"
+            stop-opacity="0.25"/>
+
+          <stop
+            offset="100%"
+            stop-color="#00d27a"
+            stop-opacity="0"/>
+
+        </radialGradient>
+
+        <linearGradient
+          id="ringGradient"
+          x1="0"
+          y1="0"
+          x2="1"
+          y2="1">
+
+          <stop
+            offset="0%"
+            stop-color="#00d27a"
+            stop-opacity="0"/>
+
+          <stop
+            offset="50%"
+            stop-color="#00d27a"
+            stop-opacity="1"/>
+
+          <stop
+            offset="100%"
+            stop-color="#00d27a"
+            stop-opacity="0"/>
+
+        </linearGradient>
+
+        <filter id="blur">
+          <feGaussianBlur stdDeviation="12"/>
+        </filter>
+
+      </defs>
+
+      <circle
+        cx="160"
+        cy="160"
+        r="90"
+        fill="url(#orbGlow)"
+        filter="url(#blur)"
+        opacity=".7"
+      />
+
+      <circle
+        cx="160"
+        cy="160"
+        r="54"
+        fill="none"
+        stroke="url(#ringGradient)"
+        stroke-width="2"
+        opacity=".9"
+      />
+
+      <g class="ring1">
+
+        <ellipse
+          cx="160"
+          cy="160"
+          rx="90"
+          ry="34"
+          fill="none"
+          stroke="url(#ringGradient)"
+          stroke-width="1.4"
+          opacity=".5"
+        />
+
+      </g>
+
+      <g class="ring2">
+
+        <ellipse
+          cx="160"
+          cy="160"
+          rx="70"
+          ry="120"
+          fill="none"
+          stroke="url(#ringGradient)"
+          stroke-width="1"
+          opacity=".3"
+        />
+
+      </g>
+
+      <g class="ring3">
+
+        <ellipse
+          cx="160"
+          cy="160"
+          rx="120"
+          ry="60"
+          fill="none"
+          stroke="url(#ringGradient)"
+          stroke-width="1"
+          opacity=".25"
+        />
+
+      </g>
+
+      <g class="particles">
+
+        <circle cx="70" cy="120" r="2" fill="#00d27a"/>
+        <circle cx="230" cy="80" r="2" fill="#00d27a"/>
+        <circle cx="250" cy="210" r="3" fill="#00d27a"/>
+        <circle cx="120" cy="260" r="2" fill="#00d27a"/>
+        <circle cx="190" cy="40" r="2" fill="#00d27a"/>
+
+      </g>
+
+    </svg>
+
+  </div>
+
+  <!-- CHART -->
+  <div
+    id="chartContainer"
+    class="
+      absolute
+      bottom-0
+      left-0
+      w-full
+      overflow-hidden
+      opacity-80
+    "
+    style="height:45%;">
+
+    <svg
+      id="chartSVG"
+      viewBox="0 0 1920 500"
+      preserveAspectRatio="none"
+      class="w-full h-full block">
+
+      <defs>
+
+        <linearGradient
+          id="mainGradient"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1">
+
+          <stop
+            offset="0%"
+            stop-color="#00d27a"
+            stop-opacity=".35"/>
+
+          <stop
+            offset="100%"
+            stop-color="#00d27a"
+            stop-opacity="0"/>
+
+        </linearGradient>
+
+      </defs>
+
+      <!-- LINE -->
+      <path
+        id="chartLine"
+        fill="none"
+        stroke="#00d27a"
+        stroke-width="4"
+        stroke-linecap="round"
+        style="
+          filter:
+          drop-shadow(0 0 12px #00d27a);
+        "
+      />
+
+      <!-- FILL -->
+      <path
+        id="chartFill"
+        fill="url(#mainGradient)"
+      />
+
+      <!-- DOTS -->
+      <g id="chartDots"></g>
+
+    </svg>
+
+  </div>
+
+  <!-- BTC -->
+  <div
+    class="
+      absolute
+      bottom-10
+      left-10
+      opacity-[0.05]
+      select-none
+      pointer-events-none
+    ">
+
+    <div
+      id="btcMark"
+      class="text-[240px] font-black"
+      style="color:#00d27a;">
+
+      ₿
+
+    </div>
+
+  </div>
+
+  <!-- SCAN -->
+  <div
+    class="
+      absolute
+      inset-0
+      overflow-hidden
+      pointer-events-none
+    ">
+
+    <div
+      class="
+        absolute
+        top-0
+        left-[-20%]
+        w-[30%]
+        h-full
+        bg-gradient-to-r
+        from-transparent
+        via-white/20
+        to-transparent
+        rotate-12
+        scan
+      ">
+    </div>
+
+  </div>
+
+  <!-- CONTROLS -->
+  <div
+    id="controls"
+    class="
+      absolute
+      top-5
+      left-1/2
+      -translate-x-1/2
+      z-50
+      transition-ui
+      controls-visible
+    ">
+
+    <div
+      class="
+        backdrop-blur-xl
+        bg-white/70
+        border
+        border-black/10
+        rounded-3xl
+        shadow-2xl
+        px-5
+        py-4
+        flex
+        flex-wrap
+        gap-4
+        items-center
+        max-w-[95vw]
+      ">
+
+      <div class="flex flex-col text-xs">
+        <label>Accent</label>
+        <input id="accentPicker" type="color" value="#00d27a"/>
+      </div>
+
+      <div class="flex flex-col text-xs">
+        <label>Background</label>
+        <input id="bgPicker" type="color" value="#f4f5f7"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[120px]">
+        <label>Chart Height</label>
+        <input id="heightSlider" type="range" min="20" max="90" value="45"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[120px]">
+        <label>Amplitude</label>
+        <input id="ampSlider" type="range" min="0.2" max="3" step="0.1" value="1"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[120px]">
+        <label>Frequency</label>
+        <input id="freqSlider" type="range" min="0.5" max="2" step="0.1" value="1"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[140px]">
+        <label>Background Image</label>
+        <input id="bgUpload" type="file" accept="image/*"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[120px]">
+        <label>BG Opacity</label>
+        <input id="bgOpacity" type="range" min="0" max="1" step="0.01" value=".18"/>
+      </div>
+
+      <div class="flex flex-col text-xs min-w-[140px]">
+        <label>Blend Mode</label>
+
+        <select
+          id="blendMode"
+          class="
+            rounded-lg
+            px-2
+            py-1
+            bg-white
+            border
+          ">
+
+          <option>normal</option>
+          <option>multiply</option>
+          <option>screen</option>
+          <option selected>overlay</option>
+          <option>soft-light</option>
+          <option>hard-light</option>
+          <option>color-dodge</option>
+          <option>luminosity</option>
+          <option>difference</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+/* ========================= */
+/* ELEMENTS */
+/* ========================= */
+
+let accent = '#00d27a';
+
+const chartLine =
+  document.getElementById('chartLine');
+
+const chartFill =
+  document.getElementById('chartFill');
+
+const chartContainer =
+  document.getElementById('chartContainer');
+
+/* ========================= */
+/* WORLD MAP */
+/* ========================= */
+
+const worldDots =
+  document.getElementById('worldDots');
+
+const continents = [];
+
+function addCluster(cx, cy, rx, ry, amount) {
+
+  for (let i = 0; i < amount; i++) {
+
+    const angle =
+      Math.random() * Math.PI * 2;
+
+    const rX =
+      Math.random() * rx;
+
+    const rY =
+      Math.random() * ry;
+
+    const x =
+      cx + Math.cos(angle) * rX;
+
+    const y =
+      cy + Math.sin(angle) * rY;
+
+    continents.push([x, y]);
+
+  }
+
+}
+
+addCluster(180, 140, 120, 70, 140);
+addCluster(300, 330, 70, 120, 90);
+addCluster(560, 120, 70, 40, 70);
+addCluster(610, 280, 90, 140, 120);
+addCluster(820, 180, 220, 110, 260);
+addCluster(980, 390, 80, 45, 60);
+
+continents.forEach((dot, i) => {
+
+  const c =
+    document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'circle'
+    );
+
+  c.setAttribute('cx', dot[0]);
+  c.setAttribute('cy', dot[1]);
+
+  c.setAttribute(
+    'r',
+    Math.random() * 1.2 + 0.6
+  );
+
+  c.setAttribute('fill', accent);
+  c.setAttribute('class', 'world-dot');
+
+  c.style.animationDelay =
+    `${i * 0.01}s`;
+
+  worldDots.appendChild(c);
+
+});
+
+/* ========================= */
+/* CHART */
+/* ========================= */
+
+function updateChart() {
+
+  const amp =
+    parseFloat(
+      document.getElementById('ampSlider').value
+    );
+
+  const freq =
+    parseFloat(
+      document.getElementById('freqSlider').value
+    );
+
+  const points = [
+
+    [0, 430 - amp * 10],
+
+    [380 * freq, 380 - amp * 25],
+
+    [700 * freq, 260 - amp * 30],
+
+    [1060 * freq, 170 - amp * 25],
+
+    [1500 * freq, 80 - amp * 25],
+
+    [1920, 20 - amp * 10]
+
+  ];
+
+  const path = `
+
+    M${points[0][0]} ${points[0][1]}
+
+    C${180 * freq} ${390 - amp * 20}
+    ${240 * freq} ${450 + amp * 15}
+    ${points[1][0]} ${points[1][1]}
+
+    C${500 * freq} ${320 - amp * 20}
+    ${560 * freq} ${340 + amp * 10}
+    ${points[2][0]} ${points[2][1]}
+
+    C${850 * freq} ${180 - amp * 40}
+    ${920 * freq} ${230 + amp * 10}
+    ${points[3][0]} ${points[3][1]}
+
+    C${1220 * freq} ${100 - amp * 30}
+    ${1320 * freq} ${140 + amp * 10}
+    ${points[4][0]} ${points[4][1]}
+
+    C${1650 * freq} ${40 - amp * 15}
+    ${1780 * freq} ${70 + amp * 5}
+    ${points[5][0]} ${points[5][1]}
+  `;
+
+  chartLine.setAttribute('d', path);
+
+  chartFill.setAttribute(
+    'd',
+    `${path} L1920 500 L0 500 Z`
+  );
+
+  /* DOTS */
+
+  const chartDots =
+    document.getElementById('chartDots');
+
+  chartDots.innerHTML = '';
+
+  points.forEach((dot, i) => {
+
+    const glow =
+      document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle'
+      );
+
+    glow.setAttribute('cx', dot[0]);
+    glow.setAttribute('cy', dot[1]);
+
+    glow.setAttribute('r', 14);
+
+    glow.setAttribute('fill', accent);
+
+    glow.setAttribute('opacity', '.12');
+
+    glow.style.animation =
+      `pulseDot 3s ease-in-out infinite`;
+
+    glow.style.animationDelay =
+      `${i * 0.2}s`;
+
+    chartDots.appendChild(glow);
+
+    const c =
+      document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle'
+      );
+
+    c.setAttribute('cx', dot[0]);
+    c.setAttribute('cy', dot[1]);
+
+    c.setAttribute('r', 5);
+
+    c.setAttribute('fill', accent);
+
+    c.style.filter =
+      `drop-shadow(0 0 10px ${accent})`;
+
+    c.style.animation =
+      `pulseDot 2.5s ease-in-out infinite`;
+
+    c.style.animationDelay =
+      `${i * 0.3}s`;
+
+    chartDots.appendChild(c);
+
+  });
+
+}
+
+updateChart();
+
+/* ========================= */
+/* CONTROLS */
+/* ========================= */
+
+document
+  .getElementById('ampSlider')
+  .oninput = updateChart;
+
+document
+  .getElementById('freqSlider')
+  .oninput = updateChart;
+
+document
+  .getElementById('heightSlider')
+  .oninput = (e) => {
+
+    chartContainer.style.height =
+      `${e.target.value}%`;
+
+};
+
+document
+  .getElementById('accentPicker')
+  .oninput = (e) => {
+
+    accent = e.target.value;
+
+    chartLine.setAttribute(
+      'stroke',
+      accent
+    );
+
+    document
+      .getElementById('btcMark')
+      .style.color = accent;
+
+    document
+      .querySelectorAll('stop')
+      .forEach(stop => {
+
+        stop.setAttribute(
+          'stop-color',
+          accent
+        );
+
+      });
+
+    document
+      .querySelectorAll('circle')
+      .forEach(circle => {
+
+        circle.setAttribute(
+          'fill',
+          accent
+        );
+
+      });
+
+    updateChart();
+
+};
+
+document
+  .getElementById('bgPicker')
+  .oninput = (e) => {
+
+    document.body.style.background =
+      e.target.value;
+
+};
+
+document
+  .getElementById('bgUpload')
+  .onchange = (e) => {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (ev) => {
+
+      document
+        .getElementById('bgImage')
+        .style.backgroundImage =
+        `url(${ev.target.result})`;
+
+    };
+
+    reader.readAsDataURL(file);
+
+};
+
+document
+  .getElementById('bgOpacity')
+  .oninput = (e) => {
+
+    document
+      .getElementById('bgImage')
+      .style.opacity =
+      e.target.value;
+
+};
+
+document
+  .getElementById('blendMode')
+  .onchange = (e) => {
+
+    document
+      .getElementById('colorLayer')
+      .style.mixBlendMode =
+      e.target.value;
+
+};
+
+/* ========================= */
+/* AUTO HIDE */
+/* ========================= */
+
+const controls =
+  document.getElementById('controls');
+
+let timeout;
+
+window.addEventListener(
+  'mousemove',
+  () => {
+
+    controls.classList.remove(
+      'controls-hidden'
+    );
+
+    controls.classList.add(
+      'controls-visible'
+    );
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+
+      controls.classList.remove(
+        'controls-visible'
+      );
+
+      controls.classList.add(
+        'controls-hidden'
+      );
+
+    }, 4000);
+
+  }
+);
+
+</script>
+
+</body>
+</html>
